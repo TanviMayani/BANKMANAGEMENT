@@ -4,11 +4,11 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from config import settings
-from database import SessionLocal
-from models import Account
-from schemas import CreateUserRequest, LoginRequest, Token
-from security import (
+from src.config import settings
+from src.database import SessionLocal
+from src.models import Account
+from src.schemas import CreateUserRequest, LoginRequest, Token
+from src.security import (
     authenticate_user,
     bcrypt_context,
     create_access_token,

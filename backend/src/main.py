@@ -3,12 +3,12 @@ from typing import Annotated
 from fastapi import FastAPI, HTTPException, Depends, status
 from sqlalchemy.orm import Session
 
-import models
-from auth import router
-from database import engine, SessionLocal
-from models import Account, Transaction
-from schemas import Deposit, Withdraw
-from security import get_current_user
+import src.models as models
+from src.auth import router
+from src.database import engine, SessionLocal
+from src.models import Account, Transaction
+from src.schemas import Deposit, Withdraw
+from src.security import get_current_user
 
 description = """
 ## welcome

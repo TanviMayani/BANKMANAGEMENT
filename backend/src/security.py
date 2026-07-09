@@ -7,8 +7,8 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import jwt, JWTError
 from passlib.context import CryptContext
 
-from config import settings
-from models import Account
+from src.config import settings
+from src.models import Account
 
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 scheme = HTTPBearer(auto_error=False)
