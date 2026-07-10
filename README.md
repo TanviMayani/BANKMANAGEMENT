@@ -233,14 +233,3 @@ See [Frontend README](frontend/README.md) for complete documentation.
 - Pydantic
 - Uvicorn
 
----
-
-## License
-
-MIT License — Feel free to use this project!
-
----
-
-## Support
-
-For issues and questions, please open an issue in the repository.
