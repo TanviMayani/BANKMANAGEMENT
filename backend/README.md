@@ -1,117 +1,215 @@
 # Backend — Banking System API
 
-A FastAPI REST API for a bank management system, using PostgreSQL for storage and JWT for authentication.
+A FastAPI REST API for a Banking Management System, using PostgreSQL for data storage and JWT (JSON Web Token) for authentication.
 
-## Structure
+---
 
-```
+## Project Structure
+
+```text
 backend/
-├── auth.py         # Auth routes: /auth/register, /auth/login, /auth/me
-├── config.py       # Loads and validates environment variables
-├── database.py     # SQLAlchemy engine + session setup
-├── main.py         # FastAPI app instance + banking routes
-├── models.py       # SQLAlchemy ORM models (Account, Transaction)
-├── schemas.py      # Pydantic models for requests/responses
-├── security.py     # Password hashing, JWT creation/verification, get_current_user
+├── src/
+│   ├── __init__.py
+│   ├── auth.py          # Authentication routes
+│   ├── config.py        # Application configuration
+│   ├── database.py      # Database connection and SQLAlchemy setup
+│   ├── main.py          # FastAPI application and banking routes
+│   ├── models.py        # SQLAlchemy models
+│   ├── schemas.py       # Pydantic request/response models
+│   └── security.py      # JWT authentication and password hashing
+│
 ├── scripts/
-│   └── generate_secret.py   # One-off script to generate a SECRET_KEY
-└── .env             # Environment variables (create this yourself, not committed)
+│   └── generate_secret.py
+│
+├── .env
+└── README.md
 ```
 
-## Setup
+---
 
-1. **Install dependencies** (from the project root, using `uv`):
-   ```bash
-   uv sync
-   ```
+## Features
 
-2. **Create a PostgreSQL database:**
-   ```sql
-   CREATE DATABASE bankmanagement;
-   ```
+- User Registration
+- User Login
+- JWT Authentication
+- Deposit Money
+- Withdraw Money
+- Check Account Balance
+- View Transaction History
+- Savings Account Benefits
+- PostgreSQL Database Integration
 
-3. **Generate a secret key:**
-   ```bash
-   python scripts/generate_secret.py
-   ```
-   Copy the output into your `.env` file as `SECRET_KEY`.
+---
 
-4. **Create `backend/.env`:**
-   ```env
-   SECRET_KEY=<your-generated-secret>
-   ALGORITHM=HS256
-   ACCESS_TOKEN_EXPIRE_MINUTES=30
-   DATABASE_URL=postgresql://postgres:123@localhost:5432/bankmanagement
-   ```
+## Requirements
 
-5. **Run the server:**
-   ```bash
-   uvicorn main:app --reload
-   ```
+- Python 3.11+
+- FastAPI
+- Uvicorn
+- PostgreSQL
+- SQLAlchemy
+- Passlib
+- Python-Jose
+- Pydantic Settings
 
-The API will be live at `http://127.0.0.1:8000`, with interactive docs at `http://127.0.0.1:8000/docs`.
+Install all dependencies:
+
+```bash
+uv sync
+```
+
+or
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## Database Setup
+
+Create a PostgreSQL database.
+
+```sql
+CREATE DATABASE bankmanagement;
+```
+
+---
+
+## Environment Variables
+
+Create a `.env` file inside the `backend` folder.
+
+```env
+SECRET_KEY=<your-generated-secret>
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+DATABASE_URL=postgresql://postgres:123@localhost:5432/bankmanagement
+```
+
+Generate a secure secret key using:
+
+```bash
+python scripts/generate_secret.py
+```
+
+Copy the generated value into `SECRET_KEY`.
+
+---
+
+## Run the Backend
+
+From the `backend` directory:
+
+```bash
+uv run uvicorn src.main:app --reload
+```
+
+The API will be available at:
+
+```
+http://127.0.0.1:8000
+```
+
+Swagger Documentation:
+
+```
+http://127.0.0.1:8000/docs
+```
+
+---
 
 ## Environment Variables
 
 | Variable | Required | Default | Description |
-|---|---|---|---|
-| `SECRET_KEY` | Yes | — | Used to sign JWTs. Generate with `scripts/generate_secret.py`. |
-| `ALGORITHM` | No | `HS256` | JWT signing algorithm. |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | No | `30` | How long a login token stays valid. |
-| `DATABASE_URL` | No | local Postgres default | Full PostgreSQL connection string. |
+|----------|----------|---------|-------------|
+| SECRET_KEY | Yes | — | Secret key used to sign JWT tokens |
+| ALGORITHM | No | HS256 | JWT signing algorithm |
+| ACCESS_TOKEN_EXPIRE_MINUTES | No | 30 | JWT expiration time in minutes |
+| DATABASE_URL | Yes | — | PostgreSQL connection string |
 
-> Note: `config.py` uses `extra = "ignore"`, so unrelated variables in `.env` won't crash the app — but make sure the variable names above match exactly, or your values will silently fall back to defaults.
+---
 
 ## API Endpoints
 
-### Auth (`/auth`)
+### Authentication
 
-| Method | Path | Description | Auth required |
-|---|---|---|---|
-| POST | `/auth/register` | Create a new account | No |
-| POST | `/auth/login` | Log in, returns a JWT | No |
-| GET | `/auth/me` | Get current logged-in user info | Yes |
+| Method | Endpoint | Description | Authentication |
+|--------|----------|-------------|----------------|
+| POST | `/auth/register` | Register a new user | No |
+| POST | `/auth/login` | Login and generate JWT | No |
+| GET | `/auth/me` | Get logged-in user details | Yes |
 
-**Register request body:**
+### Register Request
+
 ```json
 {
-  "username": "johndoe1",
-  "password": "Str0ng!Pass",
-  "account_type": "savings"
-}
-```
-- Username: 4–20 characters, letters/numbers/underscores only
-- Password: 8+ characters, must include uppercase, lowercase, number, and special character
-- Account type: `savings` or `current`
-
-**Login request body:**
-```json
-{
-  "username": "johndoe1",
-  "password": "Str0ng!Pass"
+    "username": "johndoe1",
+    "password": "Str0ng!Pass",
+    "account_type": "savings"
 }
 ```
 
-### Banking (no prefix)
+### Login Request
 
-All routes below require a `Bearer` token in the `Authorization` header.
+```json
+{
+    "username": "johndoe1",
+    "password": "Str0ng!Pass"
+}
+```
 
-| Method | Path | Description |
-|---|---|---|
-| POST | `/deposit` | Deposit funds. Body: `{"amount": 100}` |
-| POST | `/withdraw` | Withdraw funds. Body: `{"amount": 50}` |
-| GET | `/balance` | Get account balance and details |
-| GET | `/transaction` | Get transaction history |
-| GET | `/benefits` | Get interest info (savings accounts only) |
+---
+
+### Banking APIs
+
+All endpoints below require an Authorization header.
+
+```
+Authorization: Bearer <JWT_TOKEN>
+```
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/deposit` | Deposit money |
+| POST | `/withdraw` | Withdraw money |
+| GET | `/balance` | Check account balance |
+| GET | `/transaction` | View transaction history |
+| GET | `/benefits` | Check savings account benefits |
+
+---
 
 ## Authentication Flow
 
-1. `POST /auth/register` — password hashed with bcrypt, account number auto-generated
-2. `POST /auth/login` — verifies password, returns a signed JWT containing `sub` (username) and `account_number`
-3. Client sends the token as `Authorization: Bearer <token>` on every protected request
-4. `security.get_current_user` decodes and validates the token on each request
+1. Register a new account.
+2. Login with username and password.
+3. A JWT access token is generated.
+4. Include the token in the request header:
+
+```
+Authorization: Bearer <JWT_TOKEN>
+```
+
+5. `get_current_user()` validates the JWT before accessing protected endpoints.
+
+---
 
 ## Notes
 
-- `models.Base.metadata.create_all(bind=engine)` in `main.py` auto-creates tables on startup — no separate migration step needed for this project's scale.
-- Account numbers are randomly generated 10-digit strings, checked for uniqueness before assignment.
+- Passwords are securely hashed using **bcrypt**.
+- JWT tokens contain both the username and account number.
+- Account numbers are generated automatically during registration.
+- SQLAlchemy automatically creates database tables when the application starts.
+- Configuration values are loaded from the `.env` file using **Pydantic Settings**.
+
+---
+
+## Technologies Used
+
+- FastAPI
+- PostgreSQL
+- SQLAlchemy
+- JWT Authentication
+- Passlib (bcrypt)
+- Pydantic
+- Uvicorn

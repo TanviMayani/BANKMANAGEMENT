@@ -1,5 +1,5 @@
 import streamlit as st 
-import requests
+from api import (token_is_valid,register,login,get_current_user,deposit,withdraw,balance,transaction,benefits)
 
 st.set_page_config(
     page_title="BANK-MANAGEMENT-SYSTEM",
@@ -8,13 +8,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 st.title('Bank Managemnet System🏦')
-def token_is_valid(token):
-    try:
-        response = requests.get('http://127.0.0.1:8000/auth/me',headers={"Authorization": f"Bearer {token}"}
-        )
-        return response.status_code == 200
-    except requests.exceptions.RequestException:
-        return False
+
 
 if 'token' not in st.session_state and 'token' in st.query_params:
     restored_token = st.query_params['token']
@@ -41,7 +35,7 @@ if 'token' not in st.session_state:
                     'password':password,
                     'account_type':account_type
                 }
-                response=requests.post('http://127.0.0.1:8000/auth/register', json=data)
+                response = register(data)
                 if response.status_code==201:
                     st.success(f'Dear {username} you have been registered successfully')
                     st.balloons()
@@ -62,13 +56,14 @@ if 'token' not in st.session_state:
         with st.form('login_form'):
             username = st.text_input('username')
             password = st.text_input('password',type='password')
-            login = st.form_submit_button('Login')
-            if login:
+            login_clicked = st.form_submit_button('Login')
+            if login_clicked:
                 data = {
                     'username':username,
                     'password':password
                 }
-                response=requests.post('http://127.0.0.1:8000/auth/login', json=data)
+                response = login(data)
+                
                 if response.status_code==200:
                     st.success(f'Dear {username} -- login successful.')
                     
@@ -84,7 +79,7 @@ else:
     st.write('WELCOME🙏🏻')
     headers= {"Authorization": f"Bearer {st.session_state['token']}"}
     
-    response=requests.get(f'http://127.0.0.1:8000/auth/me', headers=headers)
+    response=get_current_user(headers)
     if response.status_code==200:
         user=response.json()
         st.write(f"welcome, {user['username']}👋🏻")
@@ -107,13 +102,13 @@ else:
         st.subheader('deposit')
         with st.form('Deposit_form'):
             amount = st.number_input('Deposit Amount',min_value=0,step=100)
-            deposit= st.form_submit_button('Deposit')
-        if deposit:
+            deposit_clicked= st.form_submit_button('Deposit')
+        if deposit_clicked:
             data= {
                 'amount':amount }
             headers = {"Authorization":f"Bearer {st.session_state['token']}"
                                    }
-            response =requests.post('http://127.0.0.1:8000/deposit',json=data,headers=headers)
+            response =deposit(data, headers)
             
             if response.status_code==200:
                 st.success('amount deposited successfully')
@@ -124,13 +119,13 @@ else:
         st.subheader('withdraw')
         with st.form('Withdraw_form'):
             amount = st.number_input('withdraw Amount',min_value=0,step=100)
-            withdraw= st.form_submit_button('withdraw')
-        if withdraw:
+            withdraw_clicked= st.form_submit_button('withdraw')
+        if withdraw_clicked:
             data= {
                 'amount':amount }
             headers = {"Authorization":f"Bearer {st.session_state['token']}"
                                    }
-            response =requests.post('http://127.0.0.1:8000/withdraw',json=data,headers=headers)
+            response =withdraw(data, headers)
             
             if response.status_code==200:
                 st.success('amount withdrawn successfully')
@@ -144,7 +139,7 @@ else:
         if check:
             headers = {"Authorization":f"Bearer {st.session_state['token']}"
                        }
-            response=requests.get(f'http://127.0.0.1:8000/balance', headers=headers)
+            response=balance(headers)
             data= response.json()
             
             st.write("account number : ", data["account_number"])
@@ -164,7 +159,7 @@ else:
         if history:
             headers = {"Authorization":f"Bearer {st.session_state['token']}"
                        }
-            response=requests.get(f'http://127.0.0.1:8000/transaction', headers=headers)
+            response=transaction(headers)
             
             
             if response.status_code==200:
@@ -179,11 +174,11 @@ else:
                            
     elif option=='Benefits':
         st.subheader('benefits')
-        benefits=st.button('check benefits')
-        if benefits:
+        benefits_clicked=st.button('check benefits')
+        if benefits_clicked:
             headers = {"Authorization":f"Bearer {st.session_state['token']}"
                        }
-            response=requests.get(f'http://127.0.0.1:8000/benefits', headers=headers)
+            response = benefits(headers)
             if response.status_code==200:
                 st.write(response.json())
             else:

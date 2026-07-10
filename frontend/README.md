@@ -1,58 +1,126 @@
-# Frontend — Banking System UI
+# Frontend — Banking System
 
-A Streamlit interface for the Banking System API, supporting registration, login, and account operations.
+A Streamlit-based frontend for the Banking System. It communicates with the FastAPI backend using REST APIs and JWT authentication.
 
-## Structure
+---
 
-```
+## Project Structure
+
+```text
 frontend/
-└── app.py       # Full Streamlit app (auth + dashboard)
+├── app.py          # Streamlit user interface
+├── api.py          # Functions for API requests
+├── config.py       # Backend API configuration
+└── __init__.py
 ```
 
-## Setup
-
-1. **Install dependencies** (from the project root, using `uv`):
-   ```bash
-   uv sync
-   ```
-
-2. **Make sure the backend is running first** at `http://127.0.0.1:8000` (see [`backend/README.md`](../backend/README.md)).
-
-3. **Run the app:**
-   ```bash
-   cd frontend
-   streamlit run app.py
-   ```
-
-The app will open at `http://localhost:8501`.
+---
 
 ## Features
 
-- **Register** — create a new account (savings or current)
-- **Login** — authenticate and receive a session token
-- **Dashboard**, once logged in:
-  - Deposit funds
-  - Withdraw funds
-  - Check balance
-  - View transaction history
-  - Check benefits (interest, for savings accounts)
-  - Logout
+- User Registration
+- User Login
+- JWT Authentication
+- Deposit Money
+- Withdraw Money
+- Check Account Balance
+- View Transaction History
+- Check Account Benefits
+- Logout
 
-## Session Persistence
+---
 
-Streamlit reruns the script on every interaction and doesn't persist state across a full page refresh by default. This app handles that using `st.query_params`:
+## Requirements
 
-- On login, the JWT is stored both in `st.session_state['token']` and in the URL via `st.query_params['token']`.
-- On page load, if `st.session_state` has no token but the URL does, the app validates that token against `GET /auth/me` before restoring the session.
-- On logout, both `st.session_state` and `st.query_params` are cleared.
+- Python 3.11+
+- Streamlit
+- Requests
 
-> Earlier attempts used `streamlit-cookies-controller`, but it had a race condition on component mounting. `st.query_params` proved to be the more stable approach.
+Install dependencies:
+
+```bash
+uv sync
+```
+
+or
+
+```bash
+pip install -r requirements.txt
+```
+
+---
 
 ## Configuration
+```python
+API_URL = "http://127.0.0.1:8501"
+```
 
-The backend URL is currently hardcoded as `http://127.0.0.1:8000` throughout `app.py`. If you deploy the backend elsewhere, update these URLs accordingly (or refactor into a single `API_BASE_URL` constant — see project root README's roadmap section).
+Update this URL if your backend is running on a different host or port.
+
+---
+
+## Run the Application
+
+### 1. Start the FastAPI backend
+
+```bash
+uv run uvicorn backend.src.main:app --reload
+```
+
+### 2. Start the Streamlit frontend
+
+```bash
+cd frontend
+streamlit run app.py
+```
+
+---
+
+## Authentication Flow
+
+1. Register a new account.
+2. Login using your username and password.
+3. The backend returns a JWT access token.
+4. The token is stored in the Streamlit session.
+5. Every protected API request includes:
+
+```
+Authorization: Bearer <JWT_TOKEN>
+```
+
+6. Logout clears the session and removes the token.
+
+---
+
+## Technologies Used
+
+- Streamlit
+- Python
+- Requests
+- FastAPI (Backend)
+- JWT Authentication
+
+---
+
+## API Endpoints Used
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/auth/register` | Register a new user |
+| POST | `/auth/login` | Login user |
+| GET | `/auth/me` | Get logged-in user details |
+| POST | `/deposit` | Deposit money |
+| POST | `/withdraw` | Withdraw money |
+| GET | `/balance` | Check account balance |
+| GET | `/transaction` | View transaction history |
+| GET | `/benefits` | View account benefits |
+
+---
 
 ## Notes
 
-- All authenticated requests send the token as `Authorization: Bearer <token>` in request headers.
-- Form validation (username/password rules) is enforced on the backend; the frontend surfaces any validation errors returned by the API.
+- The frontend communicates with the backend using REST APIs.
+- JWT is required for all protected operations.
+- User sessions are maintained using Streamlit Session State.
+- API request functions are organized in `api.py`.
+- The backend URL is managed through `config.py`.
