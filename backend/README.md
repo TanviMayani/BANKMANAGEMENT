@@ -1,6 +1,16 @@
 # Backend — Banking System API
 
-A FastAPI REST API for a Banking Management System, using PostgreSQL for data storage and JWT (JSON Web Token) for authentication.
+A FastAPI REST API for a Banking Management System using PostgreSQL for data storage and JWT for authentication.
+
+---
+
+## Overview
+
+The backend provides RESTful endpoints for:
+- User registration and authentication
+- Banking operations (deposit, withdraw, balance check)
+- Transaction history tracking
+- Account benefits calculation
 
 ---
 
@@ -10,47 +20,32 @@ A FastAPI REST API for a Banking Management System, using PostgreSQL for data st
 backend/
 ├── src/
 │   ├── __init__.py
-│   ├── auth.py          # Authentication routes
-│   ├── config.py        # Application configuration
-│   ├── database.py      # Database connection and SQLAlchemy setup
-│   ├── main.py          # FastAPI application and banking routes
-│   ├── models.py        # SQLAlchemy models
-│   ├── schemas.py       # Pydantic request/response models
-│   └── security.py      # JWT authentication and password hashing
-│
+│   ├── auth.py              # Authentication routes (register, login, me)
+│   ├── config.py            # Settings and environment loading
+│   ├── database.py          # SQLAlchemy setup and session management
+│   ├── main.py              # FastAPI app, banking routes (deposit, withdraw, etc)
+│   ├── models.py            # ORM models (Account, Transaction)
+│   ├── schemas.py           # Pydantic request/response schemas
+│   ├── security.py          # JWT token handling and password hashing
+│   └── logger.py            # Logging configuration
 ├── scripts/
-│   └── generate_secret.py
-│
-├── .env
-└── README.md
+│   └── generate_secret.py   # Utility to generate secure secret keys
+└── .env                     # Environment variables (git-ignored)
 ```
-
----
-
-## Features
-
-- User Registration
-- User Login
-- JWT Authentication
-- Deposit Money
-- Withdraw Money
-- Check Account Balance
-- View Transaction History
-- Savings Account Benefits
-- PostgreSQL Database Integration
 
 ---
 
 ## Requirements
 
 - Python 3.11+
+- PostgreSQL 12+
 - FastAPI
-- Uvicorn
-- PostgreSQL
 - SQLAlchemy
-- Passlib
-- Python-Jose
-- Pydantic Settings
+- Uvicorn
+- Python-Jose (JWT)
+- Passlib (password hashing)
+- Pydantic
+- Pydantic-settings
 
 Install all dependencies:
 
@@ -58,158 +53,373 @@ Install all dependencies:
 uv sync
 ```
 
-or
-
+Or with pip:
 ```bash
 pip install -r requirements.txt
 ```
 
 ---
 
-## Database Setup
+## Setup Instructions
 
-Create a PostgreSQL database.
+### 1. Environment Configuration
 
+Create `.env` file in `backend/` directory:
+
+```env
+DATABASE_URL=postgresql://postgres:password@localhost:5432/bankmanagement
+SECRET_KEY=your-generated-secret-key
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+```
+
+### 2. Generate Secret Key
+
+```bash
+cd backend
+python scripts/generate_secret.py
+```
+
+Copy the generated key and set it as `SECRET_KEY` in `.env`.
+
+### 3. Database Setup
+
+Create PostgreSQL database:
+
+```bash
+createdb bankmanagement
+```
+
+Or using psql:
 ```sql
 CREATE DATABASE bankmanagement;
 ```
 
----
-
-## Environment Variables
-
-Create a `.env` file inside the `backend` folder.
-
-```env
-SECRET_KEY=<your-generated-secret>
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-DATABASE_URL=postgresql://postgres:123@localhost:5432/bankmanagement
-```
-
-Generate a secure secret key using:
-
-```bash
-python scripts/generate_secret.py
-```
-
-Copy the generated value into `SECRET_KEY`.
+The tables will be automatically created when you first run the app (SQLAlchemy `create_all`).
 
 ---
 
-## Run the Backend
+## Running the Backend
 
-From the `backend` directory:
+### Development Server
 
 ```bash
+cd backend
 uv run uvicorn src.main:app --reload
 ```
 
-The API will be available at:
+The API starts at: `http://127.0.0.1:8000`
 
-```
-http://127.0.0.1:8000
-```
+### Production Server
 
-Swagger Documentation:
-
-```
-http://127.0.0.1:8000/docs
+```bash
+uvicorn src.main:app --host 0.0.0.0 --port 8000
 ```
 
 ---
 
-## Environment Variables
+## API Documentation
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| SECRET_KEY | Yes | — | Secret key used to sign JWT tokens |
-| ALGORITHM | No | HS256 | JWT signing algorithm |
-| ACCESS_TOKEN_EXPIRE_MINUTES | No | 30 | JWT expiration time in minutes |
-| DATABASE_URL | Yes | — | PostgreSQL connection string |
+Once running, access interactive docs at:
+- **Swagger UI**: `http://127.0.0.1:8000/docs`
+- **ReDoc**: `http://127.0.0.1:8000/redoc`
 
 ---
 
 ## API Endpoints
 
-### Authentication
+### Authentication Routes
 
-| Method | Endpoint | Description | Authentication |
-|--------|----------|-------------|----------------|
-| POST | `/auth/register` | Register a new user | No |
-| POST | `/auth/login` | Login and generate JWT | No |
-| GET | `/auth/me` | Get logged-in user details | Yes |
+#### POST `/auth/register`
+Register a new user account.
 
-### Register Request
-
+**Request:**
 ```json
 {
-    "username": "johndoe1",
-    "password": "Str0ng!Pass",
-    "account_type": "savings"
+  "username": "john_doe",
+  "password": "secure_password",
+  "account_type": "savings"
 }
 ```
 
-### Login Request
-
+**Response (201):**
 ```json
 {
-    "username": "johndoe1",
-    "password": "Str0ng!Pass"
+  "username": "john_doe",
+  "account_number": "550e8400-e29b-41d4-a716-446655440000",
+  "holder_name": "john_doe",
+  "account_type": "savings"
+}
+```
+
+#### POST `/auth/login`
+Login and receive JWT token.
+
+**Request:**
+```json
+{
+  "username": "john_doe",
+  "password": "secure_password"
+}
+```
+
+**Response (200):**
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer"
+}
+```
+
+#### GET `/auth/me`
+Get current authenticated user info.
+
+**Headers:**
+```
+Authorization: Bearer {access_token}
+```
+
+**Response (200):**
+```json
+{
+  "account_number": "550e8400-e29b-41d4-a716-446655440000",
+  "username": "john_doe",
+  "holder_name": "john_doe",
+  "account_type": "savings",
+  "balance": 5000.0
 }
 ```
 
 ---
 
-### Banking APIs
+### Banking Routes
 
-All endpoints below require an Authorization header.
-
+All banking endpoints require authentication. Include JWT token in header:
 ```
-Authorization: Bearer <JWT_TOKEN>
+Authorization: Bearer {access_token}
 ```
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/deposit` | Deposit money |
-| POST | `/withdraw` | Withdraw money |
-| GET | `/balance` | Check account balance |
-| GET | `/transaction` | View transaction history |
-| GET | `/benefits` | Check savings account benefits |
+#### POST `/deposit`
+Deposit money to account.
+
+**Request:**
+```json
+{
+  "amount": 1000.0
+}
+```
+
+**Response (200):**
+```json
+{
+  "message": "amount deposited successfully",
+  "current_balance": 6000.0
+}
+```
+
+**Errors:**
+- `400` — Amount must be positive
+- `404` — Account not found
 
 ---
 
-## Authentication Flow
+#### POST `/withdraw`
+Withdraw money from account.
 
-1. Register a new account.
-2. Login with username and password.
-3. A JWT access token is generated.
-4. Include the token in the request header:
-
+**Request:**
+```json
+{
+  "amount": 500.0
+}
 ```
-Authorization: Bearer <JWT_TOKEN>
+
+**Response (200):**
+```json
+{
+  "message": "amount withdrawn successfully",
+  "current_balance": 5500.0
+}
 ```
 
-5. `get_current_user()` validates the JWT before accessing protected endpoints.
+**Errors:**
+- `400` — Amount must be positive, or insufficient funds
+- `404` — Account not found
 
 ---
 
-## Notes
+#### GET `/balance`
+Check account balance and details.
 
-- Passwords are securely hashed using **bcrypt**.
-- JWT tokens contain both the username and account number.
-- Account numbers are generated automatically during registration.
-- SQLAlchemy automatically creates database tables when the application starts.
-- Configuration values are loaded from the `.env` file using **Pydantic Settings**.
+**Response (200):**
+```json
+{
+  "account_number": "550e8400-e29b-41d4-a716-446655440000",
+  "holder_name": "john_doe",
+  "account_type": "savings",
+  "balance": 5500.0
+}
+```
+
+**Errors:**
+- `404` — Account not found
 
 ---
 
-## Technologies Used
+#### GET `/transaction`
+View transaction history.
 
-- FastAPI
-- PostgreSQL
-- SQLAlchemy
-- JWT Authentication
-- Passlib (bcrypt)
-- Pydantic
-- Uvicorn
+**Response (200):**
+```json
+[
+  {
+    "id": 1,
+    "account_number": "550e8400-e29b-41d4-a716-446655440000",
+    "transaction_type": "deposit",
+    "amount": 5000.0
+  },
+  {
+    "id": 2,
+    "account_number": "550e8400-e29b-41d4-a716-446655440000",
+    "transaction_type": "deposit",
+    "amount": 1000.0
+  },
+  {
+    "id": 3,
+    "account_number": "550e8400-e29b-41d4-a716-446655440000",
+    "transaction_type": "withdraw",
+    "amount": 500.0
+  }
+]
+```
+
+**Errors:**
+- `400` — Account not found
+
+---
+
+#### GET `/benefits`
+View account benefits.
+
+**Response (200) - Savings Account:**
+```json
+{
+  "interest": 55.0
+}
+```
+
+**Response (200) - Current Account:**
+```json
+{
+  "message": "account type - current - no benefits are there for current account"
+}
+```
+
+*Note: Savings accounts earn 1% annual interest on current balance.*
+
+---
+
+## Database Models
+
+### Account Table
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| account_number | String | PRIMARY KEY, UNIQUE | Auto-generated UUID |
+| username | String | UNIQUE, NOT NULL | Username for login |
+| password | String | NOT NULL | Bcrypt-hashed password |
+| holder_name | String | — | Account holder's name |
+| account_type | String | — | "savings" or "current" |
+| balance | Float | DEFAULT 0 | Current account balance |
+
+### Transaction Table
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | Integer | PRIMARY KEY, AUTO_INCREMENT | Unique transaction ID |
+| transaction_type | String | — | "deposit" or "withdraw" |
+| amount | Float | — | Transaction amount |
+| account_number | String | FOREIGN KEY → Account | References account |
+
+---
+
+## Security
+
+### Password Security
+- Passwords are hashed using **bcrypt** via Passlib
+- Never stored or logged in plaintext
+- Always validated during login
+
+### JWT Tokens
+- Tokens expire after 30 minutes (configurable)
+- Signed with `SECRET_KEY` using `HS256` algorithm
+- Validated on every protected endpoint request
+
+### Account Security
+- Account numbers are randomly generated UUIDs
+- Each account is isolated to authenticated user
+- Balance checks prevent overdraft
+
+### Environment Security
+- All secrets stored in `.env` (git-ignored)
+- No hardcoded credentials
+- `SECRET_KEY` must be generated separately
+
+---
+
+## Error Handling
+
+All endpoints return appropriate HTTP status codes:
+
+| Status | Meaning |
+|--------|---------|
+| 200 | Success |
+| 201 | Created (registration) |
+| 400 | Bad request / validation error |
+| 401 | Unauthorized (missing/invalid token) |
+| 404 | Not found |
+| 500 | Server error |
+
+---
+
+## Development Tips
+
+### Database Inspection
+Connect to PostgreSQL and inspect tables:
+```bash
+psql -d bankmanagement
+```
+
+### View API Routes
+```bash
+python -c "from src.main import app; [print(route.path, route.methods) for route in app.routes]"
+```
+
+### Testing
+Use curl or Postman to test endpoints:
+
+```bash
+# Register
+curl -X POST "http://127.0.0.1:8000/auth/register" \
+  -H "Content-Type: application/json" \
+  -d '{"username":"test","password":"test123","account_type":"savings"}'
+
+# Login
+curl -X POST "http://127.0.0.1:8000/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"username":"test","password":"test123"}'
+```
+
+---
+
+## Future Enhancements
+
+- [ ] Database migrations (Alembic)
+- [ ] Comprehensive unit tests (pytest)
+- [ ] Rate limiting
+- [ ] Enhanced logging and monitoring
+- [ ] Email verification for registration
+- [ ] Refresh tokens for extended sessions
+- [ ] Multiple authentication methods (OAuth)
+- [ ] Account transfer between users
+- [ ] Transaction filtering and search
+- [ ] Docker containerization

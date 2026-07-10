@@ -15,6 +15,7 @@ from src.security import (
     generate_account_number,
     get_current_user,
 )
+from src.logger import logger
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -36,6 +37,7 @@ async def create_user(db: db_dependency, create_user_request: CreateUserRequest)
         Account.username == create_user_request.username
     ).first()
     if existing_user:
+        logger.warning(f"username already exists: {create_user_request.username}")
         raise HTTPException(status_code=400, detail="username already exists.")
 
     create_user_model = Account(
@@ -48,6 +50,7 @@ async def create_user(db: db_dependency, create_user_request: CreateUserRequest)
     )
     db.add(create_user_model)
     db.commit()
+    logger.info(f"User registered successfully: {create_user_request.username}")
     return {"message": "user registered successfully"}
 
 
@@ -55,6 +58,7 @@ async def create_user(db: db_dependency, create_user_request: CreateUserRequest)
 async def login(login_request: LoginRequest, db: db_dependency):
     user = authenticate_user(login_request.username, login_request.password, db)
     if not user:
+        logger.warning(f"login attempt failed : {login_request.username}")
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
     token = create_access_token(
@@ -62,6 +66,7 @@ async def login(login_request: LoginRequest, db: db_dependency):
         user.account_number,
         timedelta(minutes=settings.access_token_expire_minutes),
     )
+    logger.info(f"user logged in successfully :{user.username}")
     return {
         "access_token": token,
         "token_type": "Bearer",
@@ -71,4 +76,5 @@ async def login(login_request: LoginRequest, db: db_dependency):
 
 @router.get("/me")
 async def read_current_user(current_user: Annotated[dict, Depends(get_current_user)]):
+    logger.info(f"accessed by : {current_user['account_number']}")
     return current_user
