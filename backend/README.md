@@ -122,8 +122,6 @@ uvicorn src.main:app --host 0.0.0.0 --port 8000
 
 Once running, access interactive docs at:
 - **Swagger UI**: `http://127.0.0.1:8000/docs`
-- **ReDoc**: `http://127.0.0.1:8000/redoc`
-
 ---
 
 ## API Endpoints
@@ -316,31 +314,6 @@ View account benefits.
 
 *Note: Savings accounts earn 1% annual interest on current balance.*
 
----
-
-## Database Models
-
-### Account Table
-
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| account_number | String | PRIMARY KEY, UNIQUE | Auto-generated UUID |
-| username | String | UNIQUE, NOT NULL | Username for login |
-| password | String | NOT NULL | Bcrypt-hashed password |
-| holder_name | String | — | Account holder's name |
-| account_type | String | — | "savings" or "current" |
-| balance | Float | DEFAULT 0 | Current account balance |
-
-### Transaction Table
-
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| id | Integer | PRIMARY KEY, AUTO_INCREMENT | Unique transaction ID |
-| transaction_type | String | — | "deposit" or "withdraw" |
-| amount | Float | — | Transaction amount |
-| account_number | String | FOREIGN KEY → Account | References account |
-
----
 
 ## Security
 
@@ -366,20 +339,9 @@ View account benefits.
 
 ---
 
-## Error Handling
 
-All endpoints return appropriate HTTP status codes:
 
-| Status | Meaning |
-|--------|---------|
-| 200 | Success |
-| 201 | Created (registration) |
-| 400 | Bad request / validation error |
-| 401 | Unauthorized (missing/invalid token) |
-| 404 | Not found |
-| 500 | Server error |
 
----
 
 ## Development Tips
 
@@ -393,33 +355,3 @@ psql -d bankmanagement
 ```bash
 python -c "from src.main import app; [print(route.path, route.methods) for route in app.routes]"
 ```
-
-### Testing
-Use curl or Postman to test endpoints:
-
-```bash
-# Register
-curl -X POST "http://127.0.0.1:8000/auth/register" \
-  -H "Content-Type: application/json" \
-  -d '{"username":"test","password":"test123","account_type":"savings"}'
-
-# Login
-curl -X POST "http://127.0.0.1:8000/auth/login" \
-  -H "Content-Type: application/json" \
-  -d '{"username":"test","password":"test123"}'
-```
-
----
-
-## Future Enhancements
-
-- [ ] Database migrations (Alembic)
-- [ ] Comprehensive unit tests (pytest)
-- [ ] Rate limiting
-- [ ] Enhanced logging and monitoring
-- [ ] Email verification for registration
-- [ ] Refresh tokens for extended sessions
-- [ ] Multiple authentication methods (OAuth)
-- [ ] Account transfer between users
-- [ ] Transaction filtering and search
-- [ ] Docker containerization

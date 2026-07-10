@@ -24,7 +24,7 @@ frontend/
 ├── api.py           # API client functions (HTTP requests)
 ├── config.py        # Configuration and environment loading
 ├── __init__.py
-├── .env             # Environment variables (git-ignored)
+├── .env             # Environment variables 
 └── .env.example     # Template for environment setup
 ```
 
@@ -182,36 +182,7 @@ Once logged in, displays:
 - User automatically redirected to login after expiration
 - Re-login required to continue
 
----
 
-## Configuration
-
-### Environment Variables
-
-Create `frontend/.env` with:
-
-| Variable | Description | Required | Example |
-|----------|-------------|----------|---------|
-| `API_URL` | Backend API base URL | Yes | `http://127.0.0.1:8000` |
-| `STREAMLIT_DEBUG` | Enable debug mode | No | `false` |
-
-### Frontend Configuration (config.py)
-
-```python
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
-# Load from environment, raise error if not set
-API_URL = os.getenv("API_URL")
-if not API_URL:
-    raise ValueError("API_URL environment variable is not set")
-
-STREAMLIT_DEBUG = os.getenv("STREAMLIT_DEBUG", "false").lower() == "true"
-```
-
----
 
 ## API Integration
 
@@ -263,22 +234,6 @@ headers = {
 
 ---
 
-## Error Handling
-
-The application gracefully handles:
-
-| Error | Response |
-|-------|----------|
-| Backend unreachable | Shows error message with connection details |
-| Invalid credentials | Displays validation error from backend |
-| Invalid token | User redirected to login |
-| Expired token | Session cleared, user logged out |
-| Network error | Shows connection error message |
-| Insufficient funds | Shows error "not enough funds" |
-| Invalid amount | Shows validation error |
-
----
-
 ## Security
 
 ### Authentication
@@ -296,88 +251,3 @@ The application gracefully handles:
 - Secrets loaded from `.env` (git-ignored)
 - HTTPS recommended for production
 
----
-
-## Troubleshooting
-
-### Backend Connection Issues
-
-**Error:** `ConnectionRefusedError: Failed to establish connection`
-- **Cause:** Backend not running
-- **Solution:** Start backend first
-  ```bash
-  cd backend
-  uv run uvicorn src.main:app --reload
-  ```
-
-### Invalid API URL
-
-**Error:** `Failed to validate token` or connection timeouts
-- **Cause:** Wrong `API_URL` in `.env`
-- **Solution:** Verify backend URL and update `API_URL` in `frontend/.env`
-
-### Token Expiration
-
-**Error:** Suddenly logged out
-- **Cause:** JWT token expired after 30 minutes
-- **Solution:** Login again
-
-### Environment Variables Not Loading
-
-**Error:** `ValueError: API_URL environment variable is not set`
-- **Cause:** `.env` file missing or invalid
-- **Solution:** 
-  ```bash
-  cp .env.example .env
-  # Edit .env with correct API_URL
-  ```
-
-### Streamlit Caching Issues
-
-**Solution:** Clear Streamlit cache
-```bash
-streamlit cache clear
-```
-
----
-
-## Development
-
-### Running with Debug Mode
-
-Set in `frontend/.env`:
-```env
-STREAMLIT_DEBUG=true
-```
-
-### Hot Reload
-Streamlit automatically reloads when files change. No need to restart.
-
-### Testing in Streamlit
-Use the ▶ **Run** button at top-right to re-run after making changes.
-
----
-
-## Deployment Considerations
-
-For production deployment:
-1. Update `API_URL` to production backend
-2. Use HTTPS for secure connections
-3. Set `STREAMLIT_DEBUG=false`
-4. Consider using Streamlit Cloud or self-hosted option
-5. Configure proper SSL certificates
-
----
-
-## Future Enhancements
-
-- [ ] Transaction search and filtering
-- [ ] Export transaction history to CSV
-- [ ] Account settings page
-- [ ] Password change functionality
-- [ ] Account transfer between users
-- [ ] Push notifications for transactions
-- [ ] Dark mode support
-- [ ] Mobile responsiveness
-- [ ] Profile customization
-- [ ] Multi-language support

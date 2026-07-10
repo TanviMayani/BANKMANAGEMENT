@@ -196,27 +196,7 @@ See [Backend README](backend/README.md) for detailed API documentation.
 - 📝 Environment variables for all secrets (no hardcoded values)
 - 🔄 Token validation on every protected request
 
----
 
-## Environment Variables
-
-### Backend (backend/.env)
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `DATABASE_URL` | Yes | — | PostgreSQL connection string |
-| `SECRET_KEY` | Yes | — | JWT signing key (generate with script) |
-| `ALGORITHM` | No | HS256 | JWT algorithm |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | No | 30 | Token expiration time |
-
-### Frontend (frontend/.env)
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `API_URL` | Yes | — | Backend API base URL |
-| `STREAMLIT_DEBUG` | No | false | Enable debug mode |
-
-**Important:** Never commit `.env` files. Use `.env.example` as template.
-
----
 
 ## Project Modules
 
@@ -238,63 +218,6 @@ See [Backend README](backend/README.md) for complete documentation.
 - **.env.example** — Template for frontend environment variables
 
 See [Frontend README](frontend/README.md) for complete documentation.
-
----
-
-## Database Models
-
-### Account Table
-| Column | Type | Constraints |
-|--------|------|-------------|
-| account_number | String | PK, UNIQUE (UUID) |
-| username | String | UNIQUE, NOT NULL |
-| password | String | NOT NULL (bcrypt hashed) |
-| holder_name | String | — |
-| account_type | String | "savings" or "current" |
-| balance | Float | DEFAULT 0 |
-
-### Transaction Table
-| Column | Type | Constraints |
-|--------|------|-------------|
-| id | Integer | PK, AUTO_INCREMENT |
-| account_number | String | FK → Account |
-| transaction_type | String | "deposit" or "withdraw" |
-| amount | Float | — |
-
----
-
-## Troubleshooting
-
-### Backend Connection Issues
-**Error:** `ConnectionRefusedError`
-- Verify PostgreSQL is running
-- Check `DATABASE_URL` in `backend/.env`
-- Ensure database exists
-
-### Frontend Can't Connect to Backend
-**Error:** `Failed to establish connection`
-- Start backend first
-- Verify `API_URL` in `frontend/.env` matches running backend
-
-### JWT Token Errors
-- Tokens expire after 30 minutes → login again
-- Ensure `SECRET_KEY` is set in `backend/.env`
-- Check Authorization header format: `Bearer <TOKEN>`
-
----
-
-## Future Enhancements
-
-- [ ] Database migrations (Alembic)
-- [ ] Comprehensive unit tests
-- [ ] Rate limiting and request throttling
-- [ ] Email verification for registration
-- [ ] Refresh tokens for extended sessions
-- [ ] OAuth2 authentication support
-- [ ] Transaction search and filtering
-- [ ] Account transfer between users
-- [ ] Mobile-responsive UI
-- [ ] Docker containerization
 
 ---
 
